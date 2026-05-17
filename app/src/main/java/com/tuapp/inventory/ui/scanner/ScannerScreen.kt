@@ -27,6 +27,7 @@ import com.tuapp.inventory.ui.scanner.components.*
 import java.util.concurrent.Executors
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalGetImage::class)
+@androidx.camera.core.ExperimentalGetImage
 @Composable
 fun ScannerScreen(
     onNavigateBack:     () -> Unit,
@@ -54,7 +55,8 @@ fun ScannerScreen(
     // Configuración de ALTA SENSIBILIDAD para ML Kit
     val scannerOptions = remember {
         BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS) // Lee de todo (QR, CODE_128, EAN, etc)
+            .setBarcodeFormats(Barcode.FORMAT_CODE_128,
+                Barcode.FORMAT_CODE_39) // Lee de todo (QR, CODE_128, EAN, etc)
             .build()
     }
     val scanner = remember { BarcodeScanning.getClient(scannerOptions) }
@@ -70,8 +72,12 @@ fun ScannerScreen(
                 scanner.process(image)
                     .addOnSuccessListener { barcodes ->
                         if (barcodes.isNotEmpty()) {
+                            // Loguea TODOS los que detecta
+                            barcodes.forEach { barcode ->
+                                Log.d("PRUEBA_SCAN", "Código encontrado: ${barcode.rawValue} | Formato: ${barcode.format}")
+                            }
+
                             val rawValue = barcodes[0].rawValue
-                            Log.d("PRUEBA_SCAN", "¡CÓDIGO DETECTADO!: $rawValue")
                             rawValue?.let { viewModel.onBarcodeDetected(it) }
                         }
                     }
